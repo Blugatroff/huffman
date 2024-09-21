@@ -50,3 +50,4 @@ executable huffman
         -Wno-name-shadowing
         -threaded
         -rtsopts
+        -O2
