@@ -14,7 +14,6 @@ import Data.Function (on)
 import Data.List (foldl')
 import Data.Map.Strict qualified as M
 import Data.Maybe (fromMaybe)
-import Data.PQueue.Min qualified as PQ
 import Data.Primitive (Prim, sizeOf)
 import Data.Vector qualified as Vector
 import Data.Vector.Unboxed.Mutable qualified as MVector
@@ -79,6 +78,11 @@ deserialize bits cursor = case getBit bits cursor of
     let byte = getByte bits (cursor + 1)
     Just (Leaf byte 0, cursor + 9)
 
+queueInsert :: (Ord a) => a -> [a] -> [a]
+queueInsert v [] = [v]
+queueInsert v (x : xs) | x >= v = v : x : xs
+queueInsert v (x : xs) = x : queueInsert v xs
+
 readTree :: ByteString -> Maybe Node
 readTree input = buildTree queue
  where
@@ -92,17 +96,11 @@ readTree input = buildTree queue
             MVector.write occurences index (count + 1)
             loop (i + 1)
       loop 0
-    PQ.fromList . map (uncurry Leaf) . filter ((0 /=) . snd) . zip [0 ..] <$> MVector.foldr (:) [] occurences
+    map (uncurry Leaf) . filter ((0 /=) . snd) . zip [0 ..] <$> MVector.foldr (:) [] occurences
 
-  buildTree q
-    | PQ.null q = Nothing
-  buildTree q = do
-    let (left, q') = PQ.deleteFindMin q
-    if PQ.null q'
-      then Just left
-      else do
-        let (right, q'') = PQ.deleteFindMin q'
-        buildTree $ PQ.insert (Branch left right) q''
+  buildTree [] = Nothing
+  buildTree [left] = Just left
+  buildTree (left : right : q) = buildTree $ queueInsert (Branch left right) q
 
 encode :: Node -> Word64 -> ByteString -> ByteString
 encode tree inputLength input = header <> body
