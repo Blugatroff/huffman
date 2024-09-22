@@ -1,8 +1,8 @@
 # Huffman coding in Haskell, optimized for speed
-This is my attempt to write some low level haskell to see how close in can get to
+This is my attempt to write some low level haskell, to see how close in can get to
 systems languages in terms of speed and memory consumption.
 
-I am fairly happy withe result, i can compress 100MB in 0.51 seconds and decompress the result in in 0.79 seconds
+I am fairly happy with the result, i can compress 100MB in 0.51 seconds and decompress the result in in 0.79 seconds
 with less than 100KB of resident memory. (as measured by GHCs runtime profiling)
 
 This implementation is streaming by using lazy bytestrings (and lazy IO :O).
